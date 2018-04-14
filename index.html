@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <title>Elm Starter Kit</title>
+    </head>
+    <body>
+        <div id='app'></div>
+        <style type='text/css'>
+        @keyframes nodeInserted {  
+            from { opacity: 0.99; }
+            to { opacity: 1; }  
+        }
+        .data-node-inserted {
+            animation-duration: 0.001s;
+            animation-name: nodeInserted;
+        }
+        </style>
+        <script src="elm.js"></script>
+        <script>
+        const flags = {}
+        const app = window.Elm.Main.embed(document.getElementById('app'), flags)
+
+        // useful hack for an "on mount" hook that enables easy use of ports
+        // for js components.
+        document.addEventListener('animationstart', e => {
+            if (e.animationName === 'nodeInserted') {
+                const element = e.target
+            }
+        })
+        
+        window.addEventListener('online',  () => app.ports.onlineStatus.send(true));
+        window.addEventListener('offline', () => app.ports.onlineStatus.send(false));
+
+        // handle the prevent-default of link clicks and use ports for push-state
+        // based routing. This is just so much easier
+        document.addEventListener('click', e => {
+            const {href, replaceState} = (function isLink (node, count) {
+                const href = node.getAttribute('data-link')
+                const parent = e.target.parentNode
+                const next = count + 1
+                
+                if (href) return {href, replaceState: !!node.getAttribute('data-replace-state')}
+                if (!parent) return {href: false, replaceState: false}
+                if (parent && count < 4) return isLink(parent, next)
+            })(e.target, 0)
+            
+            if (href) app.ports.navigate.send(href, replaceState)
+        })
+        </script>
+    </body>
+</html>

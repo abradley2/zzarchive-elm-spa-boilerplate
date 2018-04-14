@@ -1,0 +1,15 @@
+{
+  "name": "elm-ui-fun",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "elm-live client/Main.elm --debug --output=elm.js --open",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "elm-live": "^2.7.5"
+  }
+}
