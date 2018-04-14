@@ -8,11 +8,13 @@ import UrlParser exposing (..)
 import Util exposing (tacoMsgPipeline, handleUpdate)
 import Types exposing (Flags, Taco, TacoMsg, TacoMsg(..))
 import Page.Landing as Landing
+import Page.About as About
 
 
 type alias Model =
     { taco : Taco
     , landing : Landing.Model
+    , about : About.Model
     }
 
 
@@ -21,6 +23,7 @@ type Msg
     | Navigate ( String, Bool )
     | OnlineStatusChange Bool
     | LandingMsg Landing.Msg
+    | AboutMsg About.Msg
 
 
 port navigate : (( String, Bool ) -> msg) -> Sub msg
@@ -44,6 +47,7 @@ init flags location =
             , isOnline = True
             }
       , landing = Landing.initialModel
+      , about = About.initialModel
       }
     , Cmd.none
     )
@@ -66,22 +70,27 @@ parseLocation location =
             NotFoundRoute
 
 
+updateTaco : Msg -> Taco -> ( Taco, TacoMsg, Cmd Msg )
 updateTaco msg taco =
     case msg of
+        OnlineStatusChange isOnline ->
+            ( { taco | isOnline = isOnline }, OnlineStatusChanged, Cmd.none )
+
         OnLocationChange location ->
-            ( { taco | route = parseLocation location }
-            , parseLocation location
-            , Cmd.none
-            )
+            let
+                route =
+                    parseLocation location
+            in
+                ( { taco | route = route }
+                , route
+                , Cmd.none
+                )
 
         Navigate ( newUrl, replaceState ) ->
             if replaceState then
                 ( taco, TacoNoOp, Navigation.modifyUrl newUrl )
             else
                 ( taco, TacoNoOp, Navigation.newUrl newUrl )
-
-        OnlineStatusChange isOnline ->
-            ( { taco | isOnline = isOnline }, OnlineStatusChanged, Cmd.none )
 
         _ ->
             ( taco, TacoNoOp, Cmd.none )
@@ -92,8 +101,13 @@ handleTacoMsg tacoMsg model taco tacoCmd =
         -- repeat pattern for all onTacoMsg handlers
         [ ( LandingMsg
           , Landing.onTacoMsg
-          , (\model -> model.landing)
+          , .landing
           , (\model landing -> { model | landing = landing })
+          )
+        , ( AboutMsg
+          , About.onTacoMsg
+          , .about
+          , (\model about -> { model | about = about })
           )
         ]
 
@@ -109,6 +123,14 @@ handleMsg msg model commands =
                 , (\landing -> { model | landing = landing })
                 )
 
+        AboutMsg aboutMsg ->
+            handleUpdate
+                ( AboutMsg
+                , About.onMsg aboutMsg
+                , ( model.about, model.taco )
+                , (\about -> { model | about = about })
+                )
+
         _ ->
             ( model, commands )
 
@@ -119,6 +141,9 @@ view model =
         [ case model.taco.route of
             LandingRoute ->
                 Html.Styled.map LandingMsg (Landing.view ( model.landing, model.taco ))
+
+            AboutRoute ->
+                Html.Styled.map AboutMsg (About.view ( model.about, model.taco ))
 
             _ ->
                 div [] [ text "not found" ]

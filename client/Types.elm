@@ -5,6 +5,7 @@ type TacoMsg
     = TacoNoOp
     | OnlineStatusChanged
     | LandingRoute
+    | AboutRoute
     | NotFoundRoute
 
 
