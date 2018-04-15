@@ -43,14 +43,14 @@ init : Flags -> Location -> ( Model, Cmd Msg )
 init flags location =
     ( { taco =
             { route = parseLocation location
-            , href = location.href
+            , href = "@init"
             , flags = flags
             , isOnline = True
             }
       , landing = Landing.initialModel
       , about = About.initialModel
       }
-    , Cmd.none
+    , Navigation.modifyUrl location.pathname
     )
 
 
