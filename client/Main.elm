@@ -43,6 +43,7 @@ init : Flags -> Location -> ( Model, Cmd Msg )
 init flags location =
     ( { taco =
             { route = parseLocation location
+            , location = location
             , flags = flags
             , isOnline = True
             }
@@ -57,6 +58,7 @@ matchers : Parser (TacoMsg -> a) a
 matchers =
     oneOf
         [ UrlParser.map LandingRoute (UrlParser.top)
+        , UrlParser.map AboutRoute (UrlParser.s "about")
         ]
 
 
@@ -99,7 +101,7 @@ updateTaco msg taco =
 handleTacoMsg tacoMsg model taco tacoCmd =
     case tacoMsg of
         TacoNoOp ->
-            ( model, Cmd.none )
+            ( model, tacoCmd )
 
         _ ->
             ( model, tacoCmd )
@@ -167,12 +169,11 @@ main =
 
                     -- send out any tacoMsg to any page handlers
                     ( model, commands ) =
-                        handleTacoMsg tacoMsg oldModel newTaco tacoCmd
+                        handleTacoMsg tacoMsg ({ oldModel | taco = newTaco }) newTaco tacoCmd
 
                     ( newModel, pageCmd ) =
                         handleMsg msg model commands
                 in
-                    -- then handle the msg normall
                     ( newModel, Cmd.batch [ pageCmd, commands ] )
             )
         , subscriptions = subscriptions

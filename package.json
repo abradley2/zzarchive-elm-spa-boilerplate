@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "elm-live client/Main.elm --debug --output=elm.js --open",
+    "start": "elm-live client/Main.elm --pushstate --debug --output=elm.js --open",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

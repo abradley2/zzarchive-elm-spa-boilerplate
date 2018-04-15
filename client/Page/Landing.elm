@@ -32,7 +32,7 @@ onMsg msg ( model, taco ) =
 
 onTacoMsg : TacoMsg -> ( Model, Taco ) -> ( Model, Cmd Msg )
 onTacoMsg msg ( model, taco ) =
-    case msg of
+    case (Debug.log "tacoMsg" msg) of
         LandingRoute ->
             ( initialModel, Cmd.none )
 
@@ -45,4 +45,7 @@ view ( model, taco ) =
     div []
         [ h3 [] [ text model.message ]
         , input [ type_ "text", value model.message, onInput EditMessage ] []
+        , div []
+            [ a [ href "/about", attribute "data-link" "/about" ] [ text "about page" ]
+            ]
         ]

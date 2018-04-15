@@ -37,16 +37,20 @@
         // based routing. This is just so much easier
         document.addEventListener('click', e => {
             const {href, replaceState} = (function isLink (node, count) {
-                const href = node.getAttribute('data-link')
+                const href = node.getAttribute && node.getAttribute('data-link')
                 const parent = e.target.parentNode
                 const next = count + 1
                 
                 if (href) return {href, replaceState: !!node.getAttribute('data-replace-state')}
-                if (!parent) return {href: false, replaceState: false}
+                if (!parent || count >= 4) return {href: false, replaceState: false}
                 if (parent && count < 4) return isLink(parent, next)
             })(e.target, 0)
             
-            if (href) app.ports.navigate.send(href, replaceState)
+            if (href) {
+                e.preventDefault()
+                e.stopPropagation()
+                app.ports.navigate.send([href, replaceState])
+            }
         })
         </script>
     </body>
