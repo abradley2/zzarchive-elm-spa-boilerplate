@@ -5,7 +5,7 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Navigation exposing (programWithFlags, Location)
 import UrlParser exposing (..)
-import Util exposing (tacoMsgPipeline, handleUpdate)
+import Util exposing (handleUpdate, handleTacoUpdate)
 import Types exposing (Flags, Taco, TacoMsg, TacoMsg(..))
 import Page.Landing as Landing
 import Page.About as About
@@ -97,19 +97,24 @@ updateTaco msg taco =
 
 
 handleTacoMsg tacoMsg model taco tacoCmd =
-    tacoMsgPipeline ( tacoMsg, model, taco, tacoCmd )
-        -- repeat pattern for all onTacoMsg handlers
-        [ ( LandingMsg
-          , Landing.onTacoMsg
-          , .landing
-          , (\model landing -> { model | landing = landing })
-          )
-        , ( AboutMsg
-          , About.onTacoMsg
-          , .about
-          , (\model about -> { model | about = about })
-          )
-        ]
+    case tacoMsg of
+        TacoNoOp ->
+            ( model, Cmd.none )
+
+        _ ->
+            ( model, tacoCmd )
+                |> handleTacoUpdate
+                    ( LandingMsg
+                    , Landing.onTacoMsg tacoMsg
+                    , ( model.landing, model.taco )
+                    , (\model landing -> { model | landing = landing })
+                    )
+                |> handleTacoUpdate
+                    ( AboutMsg
+                    , About.onTacoMsg tacoMsg
+                    , ( model.about, model.taco )
+                    , (\model about -> { model | about = about })
+                    )
 
 
 handleMsg msg model commands =
