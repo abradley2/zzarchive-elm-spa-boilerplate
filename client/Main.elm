@@ -43,7 +43,7 @@ init : Flags -> Location -> ( Model, Cmd Msg )
 init flags location =
     ( { taco =
             { route = parseLocation location
-            , location = location
+            , href = location.href
             , flags = flags
             , isOnline = True
             }
@@ -83,8 +83,14 @@ updateTaco msg taco =
                 route =
                     parseLocation location
             in
-                ( { taco | route = route }
-                , route
+                ( { taco
+                    | route = route
+                    , href = location.href
+                  }
+                , if taco.href /= location.href then
+                    route
+                  else
+                    TacoNoOp
                 , Cmd.none
                 )
 

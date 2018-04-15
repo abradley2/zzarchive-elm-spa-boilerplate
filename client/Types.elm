@@ -1,7 +1,5 @@
 module Types exposing (..)
 
-import Navigation exposing (Location)
-
 
 type TacoMsg
     = TacoNoOp
@@ -18,6 +16,6 @@ type alias Flags =
 type alias Taco =
     { flags : Flags
     , route : TacoMsg
-    , location : Location
+    , href : String
     , isOnline : Bool
     }
