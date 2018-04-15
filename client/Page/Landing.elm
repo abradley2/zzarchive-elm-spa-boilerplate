@@ -32,7 +32,7 @@ onMsg msg ( model, taco ) =
 
 onTacoMsg : TacoMsg -> ( Model, Taco ) -> ( Model, Cmd Msg )
 onTacoMsg msg ( model, taco ) =
-    case (Debug.log "tacoMsg" msg) of
+    case msg of
         LandingRoute ->
             ( initialModel, Cmd.none )
 
