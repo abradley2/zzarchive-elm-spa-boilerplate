@@ -4,12 +4,56 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "elm-live client/Main.elm --pushstate --debug --output=elm.js --open",
+    "dev:client": "elm-live client/Main.elm --dir=./static --pushstate --debug --output=static/elm.js",
+    "dev:api": "PORT=5000 NODE_ENV=development nodemon ./api/index.js | pino-colada",
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:api\"",
+    "start:client": "elm-make client/Main.elm --output=static/elm.js && uglifyjs ./static/elm.js -o ./static/elm.js",
+    "start:api": "NODE_ENV=production node api/index.js",
+    "start": "npm run start:client && npm run start:api",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "elm-live": "^2.7.5"
+    "@koa/cors": "^2.2.1",
+    "concurrently": "^3.5.1",
+    "cuid": "^2.1.1",
+    "date-fns": "^1.29.0",
+    "elm-live": "^2.7.5",
+    "ioredis": "^3.2.2",
+    "is-my-json-valid": "^2.17.2",
+    "jsonwebtoken": "^8.2.1",
+    "koa": "^2.4.1",
+    "koa-bodyparser": "^4.2.0",
+    "koa-route": "^3.2.0",
+    "koa-static": "^4.0.2",
+    "pino": "^4.16.1",
+    "pino-colada": "^1.4.4",
+    "uglify-js": "^2.8.29"
+  },
+  "xo": {
+    "envs": [
+      "node",
+      "browser"
+    ],
+    "ignore": [
+      "public/main.bundle.js",
+      "public/bundle.js"
+    ],
+    "semicolon": false,
+    "space": 4
+  },
+  "devDependencies": {
+    "nodemon": "^1.17.3",
+    "xo": "^0.20.3"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "./node_modules/*",
+      "./elm_stuff/*",
+      "./client/*",
+      "./.git/*",
+      "./static/local-config.js"
+    ]
   }
 }

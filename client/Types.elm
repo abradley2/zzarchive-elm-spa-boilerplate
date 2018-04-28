@@ -10,7 +10,9 @@ type TacoMsg
 
 
 type alias Flags =
-    {}
+    { apiUrl : String
+    , env : String
+    }
 
 
 type alias Taco =
@@ -19,3 +21,7 @@ type alias Taco =
     , href : String
     , isOnline : Bool
     }
+
+
+type alias HelloResponse =
+    { message : String }

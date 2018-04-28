@@ -1,9 +1,11 @@
 module Page.Landing exposing (initialModel, view, onMsg, onTacoMsg, Msg, Model)
 
+import Http
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Types exposing (Taco, TacoMsg, TacoMsg(..))
+import Types exposing (Taco, TacoMsg, TacoMsg(..), HelloResponse)
+import Request.Hello exposing (..)
 
 
 type alias Model =
@@ -18,6 +20,7 @@ initialModel =
 type Msg
     = NoOp
     | EditMessage String
+    | HelloResult (Result Http.Error HelloResponse)
 
 
 onMsg : Msg -> ( Model, Taco ) -> ( Model, Cmd Msg )
@@ -34,7 +37,7 @@ onTacoMsg : TacoMsg -> ( Model, Taco ) -> ( Model, Cmd Msg )
 onTacoMsg msg ( model, taco ) =
     case msg of
         LandingRoute ->
-            ( initialModel, Cmd.none )
+            ( initialModel, Http.send HelloResult (getMessage taco.flags.apiUrl) )
 
         _ ->
             ( model, Cmd.none )
