@@ -1,5 +1,5 @@
-const route = require('koa-route')
+const withValidation = require('../middleware/validate')
 
 module.exports = function (app) {
-    app.use(route.get('/hello', require('./hello').get))
+    app.use(withValidation.get('/hello', require('./hello').get))
 }
