@@ -125,7 +125,7 @@ handleTacoMsg tacoMsg model taco tacoCmd =
                     )
 
 
-handleMsg msg model commands =
+handleMsg msg model =
     case msg of
         -- repeat pattern for all onMsg handlers
         LandingMsg landingMsg ->
@@ -145,7 +145,7 @@ handleMsg msg model commands =
                 )
 
         _ ->
-            ( model, commands )
+            ( model, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -175,12 +175,12 @@ main =
 
                     -- send out any tacoMsg to any page handlers
                     ( model, commands ) =
-                        handleTacoMsg tacoMsg ({ oldModel | taco = newTaco }) newTaco tacoCmd
+                        handleTacoMsg tacoMsg ({ oldModel | taco = newTaco }) newTaco [ tacoCmd ]
 
                     ( newModel, pageCmd ) =
-                        handleMsg msg model commands
+                        handleMsg msg model
                 in
-                    ( newModel, Cmd.batch [ pageCmd, commands ] )
+                    ( newModel, Cmd.batch [ pageCmd, Cmd.batch commands ] )
             )
         , subscriptions = subscriptions
         , view = view >> toUnstyled

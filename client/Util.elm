@@ -16,4 +16,4 @@ handleTacoUpdate ( msgMap, handler, getter, setter ) ( model, cmds ) =
         ( newModelSlice, cmd ) =
             handler getter
     in
-        ( setter model newModelSlice, Cmd.batch [ cmds, Cmd.map msgMap cmd ] )
+        ( setter model newModelSlice, (Cmd.map msgMap cmd) :: cmds )
