@@ -138,25 +138,36 @@ updatePage msg model =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    {- handle all other (session) messages -}
-    case msg of
-        OnLocationChange location ->
-            (locationToRoute >> setRoute model >> loadPage) (location)
+    let
+        taco =
+            model.taco
+    in
+        {- handle all other (session) messages -}
+        case msg of
+            OnLocationChange location ->
+                (locationToRoute >> setRoute model >> loadPage) (location)
 
-        Navigate ( href, replaceState ) ->
-            ( model
-            , if replaceState then
-                modifyUrl href
-              else
-                newUrl href
-            )
+            OnlineStatusChange isOnline ->
+                let
+                    newTaco =
+                        { taco | isOnline = isOnline }
+                in
+                    ( { model | taco = newTaco }, Cmd.none )
 
-        _ ->
-            let
-                ( page, cmd ) =
-                    updatePage msg model
-            in
-                ( { model | page = page }, cmd )
+            Navigate ( href, replaceState ) ->
+                ( model
+                , if replaceState then
+                    modifyUrl href
+                  else
+                    newUrl href
+                )
+
+            _ ->
+                let
+                    ( page, cmd ) =
+                        updatePage msg model
+                in
+                    ( { model | page = page }, cmd )
 
 
 main =

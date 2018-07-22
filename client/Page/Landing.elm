@@ -39,4 +39,11 @@ view ( model, taco ) =
         , div []
             [ a [ href "/about", attribute "data-link" "/about" ] [ text "about page" ]
             ]
+        , h3 []
+            [ text <|
+                if taco.isOnline then
+                    "You are online"
+                else
+                    "You are offline"
+            ]
         ]
