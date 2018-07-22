@@ -3,24 +3,29 @@ port module Main exposing (..)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Navigation exposing (programWithFlags, Location)
+import Navigation exposing (programWithFlags, Location, newUrl, modifyUrl)
 import UrlParser exposing (..)
-import Util exposing (handleUpdate, handleTacoUpdate)
-import Types exposing (Flags, Taco, TacoMsg, TacoMsg(..))
+import Types exposing (Flags, Route, Route(..), Taco)
 import Page.Landing as Landing
 import Page.About as About
 
 
+type Page
+    = Landing Landing.Model
+    | About About.Model
+    | NotFound (Maybe Bool)
+
+
 type alias Model =
     { taco : Taco
-    , landing : Landing.Model
-    , about : About.Model
+    , page : Page
     }
 
 
 type Msg
-    = OnLocationChange Location
+    = NoOp Never
     | Navigate ( String, Bool )
+    | OnLocationChange Location
     | OnlineStatusChange Bool
     | LandingMsg Landing.Msg
     | AboutMsg About.Msg
@@ -42,146 +47,122 @@ subscriptions model =
 init : Flags -> Location -> ( Model, Cmd Msg )
 init flags location =
     ( { taco =
-            { route = parseLocation location
+            { route = locationToRoute location
             , href = "@init"
             , flags = flags
             , isOnline = True
             }
-      , landing = Landing.initialModel
-      , about = About.initialModel
+      , page = NotFound Nothing
       }
     , Navigation.modifyUrl location.pathname
     )
 
 
-matchers : Parser (TacoMsg -> a) a
-matchers =
-    oneOf
-        [ UrlParser.map LandingRoute (UrlParser.top)
-        , UrlParser.map AboutRoute (UrlParser.s "about")
-        ]
-
-
-parseLocation : Location -> TacoMsg
-parseLocation location =
-    case (parsePath matchers location) of
-        Just route ->
-            route
-
-        Nothing ->
-            NotFoundRoute
-
-
-updateTaco : Msg -> Taco -> ( Taco, TacoMsg, Cmd Msg )
-updateTaco msg taco =
-    case msg of
-        OnlineStatusChange isOnline ->
-            ( { taco | isOnline = isOnline }, OnlineStatusChanged, Cmd.none )
-
-        OnLocationChange location ->
-            let
-                route =
-                    parseLocation location
-            in
-                ( { taco
-                    | route = route
-                    , href = location.href
-                  }
-                , if taco.href /= location.href then
-                    route
-                  else
-                    TacoNoOp
-                , Cmd.none
-                )
-
-        Navigate ( newUrl, replaceState ) ->
-            if replaceState then
-                ( taco, TacoNoOp, Navigation.modifyUrl newUrl )
-            else
-                ( taco, TacoNoOp, Navigation.newUrl newUrl )
-
-        _ ->
-            ( taco, TacoNoOp, Cmd.none )
-
-
-handleTacoMsg tacoMsg model taco tacoCmd =
-    case tacoMsg of
-        TacoNoOp ->
-            ( model, tacoCmd )
-
-        _ ->
-            ( model, tacoCmd )
-                |> handleTacoUpdate
-                    ( LandingMsg
-                    , Landing.onTacoMsg tacoMsg
-                    , ( model.landing, model.taco )
-                    , (\model landing -> { model | landing = landing })
-                    )
-                |> handleTacoUpdate
-                    ( AboutMsg
-                    , About.onTacoMsg tacoMsg
-                    , ( model.about, model.taco )
-                    , (\model about -> { model | about = about })
-                    )
-
-
-handleMsg msg model =
-    case msg of
-        -- repeat pattern for all onMsg handlers
-        LandingMsg landingMsg ->
-            handleUpdate
-                ( LandingMsg
-                , Landing.onMsg landingMsg
-                , ( model.landing, model.taco )
-                , (\landing -> { model | landing = landing })
-                )
-
-        AboutMsg aboutMsg ->
-            handleUpdate
-                ( AboutMsg
-                , About.onMsg aboutMsg
-                , ( model.about, model.taco )
-                , (\about -> { model | about = about })
-                )
-
-        _ ->
-            ( model, Cmd.none )
-
-
 view : Model -> Html Msg
 view model =
     div []
-        [ case model.taco.route of
-            LandingRoute ->
-                Html.Styled.map LandingMsg (Landing.view ( model.landing, model.taco ))
+        [ case ( model.page, model.taco.route ) of
+            ( Landing landing, LandingRoute ) ->
+                Html.Styled.map LandingMsg (Landing.view ( landing, model.taco ))
 
-            AboutRoute ->
-                Html.Styled.map AboutMsg (About.view ( model.about, model.taco ))
+            ( About about, AboutRoute ) ->
+                Html.Styled.map AboutMsg (About.view ( about, model.taco ))
 
-            _ ->
+            ( _, _ ) ->
                 div [] [ text "not found" ]
         ]
+
+
+locationToRoute : Location -> Route
+locationToRoute location =
+    let
+        matchers =
+            oneOf <|
+                [ UrlParser.map LandingRoute (UrlParser.top)
+                , UrlParser.map AboutRoute (UrlParser.s "about")
+                ]
+    in
+        case (parsePath matchers location) of
+            Just route ->
+                route
+
+            Nothing ->
+                NotFoundRoute
+
+
+setRoute : Model -> Route -> Model
+setRoute model route =
+    let
+        taco =
+            model.taco
+
+        updatedTaco =
+            { taco | route = route }
+    in
+        { model | taco = updatedTaco }
+
+
+mapPage ( msgMap, cmdMap ) ( page, msg ) =
+    ( msgMap page, Cmd.map cmdMap msg )
+
+
+loadPage : Model -> ( Model, Cmd Msg )
+loadPage model =
+    let
+        ( page, cmd ) =
+            case model.taco.route of
+                LandingRoute ->
+                    mapPage ( Landing, LandingMsg ) <| Landing.load model.taco
+
+                AboutRoute ->
+                    mapPage ( About, AboutMsg ) <| About.load model.taco
+
+                NotFoundRoute ->
+                    mapPage ( NotFound, NoOp ) <| ( Nothing, Cmd.none )
+    in
+        ( { model | page = page }, cmd )
+
+
+updatePage : Msg -> Model -> ( Page, Cmd Msg )
+updatePage msg model =
+    case ( msg, model.page ) of
+        ( LandingMsg landingMsg, Landing landing ) ->
+            mapPage ( Landing, LandingMsg ) <| Landing.onMsg landingMsg ( landing, model.taco )
+
+        ( AboutMsg aboutMsg, About about ) ->
+            mapPage ( About, AboutMsg ) <| About.onMsg aboutMsg ( about, model.taco )
+
+        _ ->
+            ( model.page, Cmd.none )
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    {- handle all other (session) messages -}
+    case msg of
+        OnLocationChange location ->
+            (locationToRoute >> setRoute model >> loadPage) (location)
+
+        Navigate ( href, replaceState ) ->
+            ( model
+            , if replaceState then
+                modifyUrl href
+              else
+                newUrl href
+            )
+
+        _ ->
+            let
+                ( page, cmd ) =
+                    updatePage msg model
+            in
+                ( { model | page = page }, cmd )
 
 
 main =
     Navigation.programWithFlags OnLocationChange
         { init = init
-        , update =
-            (\msg oldModel ->
-                let
-                    -- update the taco
-                    ( newTaco, tacoMsg, tacoCmd ) =
-                        updateTaco msg oldModel.taco
-
-                    -- send out any tacoMsg to any page handlers
-                    ( model, commands ) =
-                        handleTacoMsg tacoMsg ({ oldModel | taco = newTaco }) newTaco [ tacoCmd ]
-
-                    ( newModel, pageCmd ) =
-                        handleMsg msg model
-                in
-                    ( newModel, Cmd.batch [ pageCmd, Cmd.batch commands ] )
-            )
+        , update = update
         , subscriptions = subscriptions
         , view = view >> toUnstyled
         }

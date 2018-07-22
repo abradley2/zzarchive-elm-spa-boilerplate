@@ -1,21 +1,19 @@
 module Types exposing (..)
 
 
-type TacoMsg
-    = TacoNoOp
-    | OnlineStatusChanged
-    | LandingRoute
-    | AboutRoute
-    | NotFoundRoute
-
-
 type alias Flags =
     {}
 
 
+type Route
+    = AboutRoute
+    | LandingRoute
+    | NotFoundRoute
+
+
 type alias Taco =
     { flags : Flags
-    , route : TacoMsg
+    , route : Route
     , href : String
     , isOnline : Bool
     }

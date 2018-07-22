@@ -1,18 +1,14 @@
-module Page.Landing exposing (initialModel, view, onMsg, onTacoMsg, Msg, Model)
+module Page.Landing exposing (view, load, onMsg, Msg, Model)
 
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Types exposing (Taco, TacoMsg, TacoMsg(..))
+import Types exposing (Taco)
 
 
 type alias Model =
     { message : String
     }
-
-
-initialModel =
-    { message = "beep boop" }
 
 
 type Msg
@@ -30,14 +26,9 @@ onMsg msg ( model, taco ) =
             ( model, Cmd.none )
 
 
-onTacoMsg : TacoMsg -> ( Model, Taco ) -> ( Model, Cmd Msg )
-onTacoMsg msg ( model, taco ) =
-    case msg of
-        LandingRoute ->
-            ( initialModel, Cmd.none )
-
-        _ ->
-            ( model, Cmd.none )
+load : Taco -> ( Model, Cmd Msg )
+load taco =
+    ( { message = "beep boop" }, Cmd.none )
 
 
 view : ( Model, Taco ) -> Html Msg
