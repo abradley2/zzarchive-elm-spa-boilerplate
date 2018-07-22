@@ -37,7 +37,7 @@ view ( model, taco ) =
         [ h3 [] [ text model.message ]
         , input [ type_ "text", value model.message, onInput EditMessage ] []
         , div []
-            [ a [ href "/about", attribute "data-link" "/about" ] [ text "about page" ]
+            [ a [ href "/about", attribute "data-link" "" ] [ text "about page" ]
             ]
         , h3 []
             [ text <|

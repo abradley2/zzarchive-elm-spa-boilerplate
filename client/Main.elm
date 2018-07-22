@@ -11,9 +11,9 @@ import Page.About as About
 
 
 type Page
-    = Landing Landing.Model
-    | About About.Model
-    | NotFound (Maybe Bool)
+    = LandingPage Landing.Model
+    | AboutPage About.Model
+    | NotFoundPage (Maybe Bool)
 
 
 type alias Model =
@@ -52,7 +52,7 @@ init flags location =
             , flags = flags
             , isOnline = True
             }
-      , page = NotFound Nothing
+      , page = NotFoundPage Nothing
       }
     , Navigation.modifyUrl location.pathname
     )
@@ -62,11 +62,11 @@ view : Model -> Html Msg
 view model =
     div []
         [ case ( model.page, model.taco.route ) of
-            ( Landing landing, LandingRoute ) ->
-                Html.Styled.map LandingMsg (Landing.view ( landing, model.taco ))
+            ( LandingPage landingPage, LandingRoute ) ->
+                Html.Styled.map LandingMsg (Landing.view ( landingPage, model.taco ))
 
-            ( About about, AboutRoute ) ->
-                Html.Styled.map AboutMsg (About.view ( about, model.taco ))
+            ( AboutPage aboutPage, AboutRoute ) ->
+                Html.Styled.map AboutMsg (About.view ( aboutPage, model.taco ))
 
             ( _, _ ) ->
                 div [] [ text "not found" ]
@@ -112,13 +112,13 @@ loadPage model =
         ( page, cmd ) =
             case model.taco.route of
                 LandingRoute ->
-                    mapPage ( Landing, LandingMsg ) <| Landing.load model.taco
+                    mapPage ( LandingPage, LandingMsg ) <| Landing.load model.taco
 
                 AboutRoute ->
-                    mapPage ( About, AboutMsg ) <| About.load model.taco
+                    mapPage ( AboutPage, AboutMsg ) <| About.load model.taco
 
                 NotFoundRoute ->
-                    mapPage ( NotFound, NoOp ) <| ( Nothing, Cmd.none )
+                    mapPage ( NotFoundPage, NoOp ) <| ( Nothing, Cmd.none )
     in
         ( { model | page = page }, cmd )
 
@@ -126,11 +126,11 @@ loadPage model =
 updatePage : Msg -> Model -> ( Page, Cmd Msg )
 updatePage msg model =
     case ( msg, model.page ) of
-        ( LandingMsg landingMsg, Landing landing ) ->
-            mapPage ( Landing, LandingMsg ) <| Landing.onMsg landingMsg ( landing, model.taco )
+        ( LandingMsg landingMsg, LandingPage landing ) ->
+            mapPage ( LandingPage, LandingMsg ) <| Landing.onMsg landingMsg ( landing, model.taco )
 
-        ( AboutMsg aboutMsg, About about ) ->
-            mapPage ( About, AboutMsg ) <| About.onMsg aboutMsg ( about, model.taco )
+        ( AboutMsg aboutMsg, AboutPage about ) ->
+            mapPage ( AboutPage, AboutMsg ) <| About.onMsg aboutMsg ( about, model.taco )
 
         _ ->
             ( model.page, Cmd.none )

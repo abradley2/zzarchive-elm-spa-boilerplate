@@ -30,5 +30,5 @@ view : ( Model, Taco ) -> Html Msg
 view ( model, taco ) =
     div []
         [ h3 [] [ text "just some other page" ]
-        , a [ href "/", attribute "data-link" "/" ] [ text "I feel so broke up, I wanna go home" ]
+        , a [ href "/", attribute "data-link" "" ] [ text "I feel so broke up, I wanna go home" ]
         ]
